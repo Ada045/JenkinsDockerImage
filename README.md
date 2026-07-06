@@ -39,15 +39,14 @@ flowchart LR
  ### FIRST RUN apt-get update && apt-get install -y...:
 - Apt-get update refreshes the package index so the subsequent install pulls current package metadata. The install list breaks down as:
 
-<u>git</u> — required for Jenkins to clone source repositories during pipeline execution
-maven — build tool for Java-based projects
-curl / wget — HTTP clients used for downloading files; both included, though either alone would typically suffice
-unzip — needed for extracting compressed archives (plugins, artifacts, etc.)
-gnupg / ca-certificates — not used directly, but required as dependencies for verifying the GPG signature and TLS certificates in the Docker repository setup in the next step
+- git — required for Jenkins to clone source repositories during pipeline execution
+- maven — build tool for Java-based projects
+- curl / wget — HTTP clients used for downloading files; both included, though either alone would typically suffice
+- unzip — needed for extracting compressed archives (plugins, artifacts, etc.)
+- gnupg / ca-certificates — not used directly, but required as dependencies for verifying the GPG signature and TLS certificates in the Docker repository setup in the next step
+- rm -rf /var/lib/apt/lists/* clears the downloaded package index files after installation. This is a standard image-size optimization — it has no effect on installed packages, it just avoids carrying unnecessary cache data in the image layer.
 
-rm -rf /var/lib/apt/lists/* clears the downloaded package index files after installation. This is a standard image-size optimization — it has no effect on installed packages, it just avoids carrying unnecessary cache data in the image layer.
-
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker.gpg && \
+### RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" > /etc/apt/sources.list.d/docker.list && \
     apt-get update && \
     apt-get install -y docker-ce-cli
