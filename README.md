@@ -2,11 +2,6 @@
 
 A custom Jenkins image with Git, Maven, and the Docker CLI already installed — so you don't have to set them up by hand every time you start a new Jenkins container.
 
-![Jenkins](https://img.shields.io/badge/Jenkins-LTS-D24939?style=flat-square&logo=jenkins&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-CLI-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=openjdk&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
-
 ## The Problem
 
 Every time I ran Jenkins in a new Docker container — on a new machine, or after rebuilding — I had to manually install the same tools before I could run any pipeline:
@@ -30,7 +25,7 @@ flowchart LR
 
 ## What's Inside
 
-- Jenkins LTS (with Java 17 built in)
+- Jenkins LTS (with Java 21 built in)
 - Git
 - Maven
 - Docker CLI
@@ -39,7 +34,7 @@ flowchart LR
 ## The Dockerfile
 
 ```dockerfile
-FROM jenkins/jenkins:lts-jdk17
+FROM jenkins/jenkins:lts-jdk21
 
 USER root
 
@@ -63,7 +58,7 @@ USER jenkins
 
 **What each part does:**
 
-1. **`FROM jenkins/jenkins:lts-jdk17`** — starts from the official Jenkins LTS image, which already includes Java 17.
+1. **`FROM jenkins/jenkins:lts-jdk21`** — starts from the official Jenkins LTS image, which already includes Java 21.
 2. **First `RUN`** — installs Git, Maven, and a few helper tools (`curl`, `wget`, `unzip`, `gnupg`, `ca-certificates`) needed for the next step.
 3. **Second `RUN`** — adds Docker's official package repository and installs just the Docker **CLI** (not a full Docker daemon). Jenkins talks to the Docker daemon already running on the host machine.
 4. **`USER jenkins`** — switches back to the regular Jenkins user so the container doesn't run as root.
