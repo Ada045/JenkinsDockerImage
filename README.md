@@ -51,6 +51,8 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /
 
 USER jenkins
 ```
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/6273c5fa-62e8-408f-8d3a-b3f45f26fdaa" />
+
 
 Walking through it:
 
