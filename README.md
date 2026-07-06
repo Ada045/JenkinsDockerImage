@@ -28,6 +28,8 @@ flowchart LR
 - A few small dependencies needed to add Docker's package repo: curl, wget, unzip, gnupg, ca-certificates
 
 ## The Dockerfile
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/6496e860-2a56-47d7-b73e-969445d80a76" />
+
 
 ```dockerfile
 FROM jenkins/jenkins:lts-jdk21
