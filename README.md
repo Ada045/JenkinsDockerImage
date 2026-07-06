@@ -27,20 +27,20 @@ flowchart LR
 - Docker CLI
 - A few small dependencies needed to add Docker's package repo: curl, wget, unzip, gnupg, ca-certificates
 
-## The Dockerfile
+## The Dockerfile Explained
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/6496e860-2a56-47d7-b73e-969445d80a76" />
 
-## FROM jenkins/jenkins:lts-jdk21
-Uses the official Jenkins LTS image as the base layer. This image already ships with Jenkins itself and a Java 21 runtime, so those don't need to be provisioned separately.
+### FROM jenkins/jenkins:lts-jdk21:
+- Uses the official Jenkins LTS image as the base layer. This image already ships with Jenkins itself and a Java 21 runtime, so those don't need to be provisioned separately.
 
-## USER root
-Switches to the root user inside the container. Package installation via apt-get requires elevated privileges, so this is necessary before the following RUN instructions.
+### USER root:
+- Switches to the root user inside the container. Package installation via apt-get requires elevated privileges, so this is necessary before the following RUN instructions.
 
- ## FIRST RUN apt-get update && apt-get install -y...
- apt-get update refreshes the package index so the subsequent install pulls current package metadata. The install list breaks down as:
+ ### FIRST RUN apt-get update && apt-get install -y...:
+- Apt-get update refreshes the package index so the subsequent install pulls current package metadata. The install list breaks down as:
 
-git ### — required for Jenkins to clone source repositories during pipeline execution
-### maven ### — build tool for Java-based projects
+<u>git</u> — required for Jenkins to clone source repositories during pipeline execution
+maven — build tool for Java-based projects
 curl / wget — HTTP clients used for downloading files; both included, though either alone would typically suffice
 unzip — needed for extracting compressed archives (plugins, artifacts, etc.)
 gnupg / ca-certificates — not used directly, but required as dependencies for verifying the GPG signature and TLS certificates in the Docker repository setup in the next step
