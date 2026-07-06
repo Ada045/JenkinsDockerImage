@@ -4,15 +4,13 @@ A Jenkins image with Git, Maven, and the Docker CLI already baked in, so you don
 
 ## Why I built this
 
-I kept running into the same annoyance. Every time I started a fresh Jenkins container, whether on a new machine or after rebuilding one, I had to install the same things before any pipeline would actually work:
+I kept running into the same problem. Every time I started a fresh Jenkins container, whether on a new machine or after rebuilding one, I had to install the same things before any pipeline would actually work:
 
 - Docker CLI, so Jenkins can build and push images
 - Git, so it can clone repos
 - Maven, so it can build Java projects
 
-None of that is hard on its own, but doing it every single time gets old fast, and it's the kind of thing where you eventually forget a step or install a slightly different version without noticing.
-
-So instead of setting these up after the container starts, I put them straight into the image itself. Now a new Jenkins container comes up already able to build and push, no setup required.
+Instead of setting these up after the container starts, I put them straight into the image itself. Now a new Jenkins container comes up already able to build and push, no setup required.
 
 ```mermaid
 flowchart LR
