@@ -52,29 +52,15 @@ flowchart LR
     apt-get install -y docker-ce-cli
 
 USER jenkins
-```
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/6273c5fa-62e8-408f-8d3a-b3f45f26fdaa" />
-
-
-Walking through it:
-
-Starting point is the official Jenkins LTS image, which already ships with Java 21, so that's covered from the start.
-
-The first `RUN` installs Git and Maven directly, plus a handful of smaller tools (curl, wget, unzip, gnupg, ca-certificates) that aren't needed on their own but are required for the next step to work.
-
-The second `RUN` adds Docker's official APT repository and installs the Docker CLI. Just the CLI, not the full Docker engine. Jenkins doesn't run its own Docker daemon inside the container; it talks to the one already running on the host machine.
-
-Last line switches back to the jenkins user, so the container isn't running as root once it's up.
 
 ## How I built and pushed it
 
 ```bash
 docker build -t my-jenkins .
-docker tag my-jenkins ghcr.io/your-username/my-jenkins:latest
-docker push ghcr.io/your-username/my-jenkins:latest
+docker tag my-jenkins ada045/my-jenkins:1.1
+docker push ada045/my-jenkins:1.1.
 ```
-
-Build it, tag it for the registry, push it. That's really all there is to it.
 
 ## Running it
 
@@ -82,8 +68,10 @@ Build it, tag it for the registry, push it. That's really all there is to it.
 docker run -d \
   --name jenkins \
   -p 8080:8080 \
+  -p 50000:50000 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  ghcr.io/your-username/my-jenkins:latest
+  -v jenkins_home:/var/jenkins_home
+  ada045/my-jenkins:1.1
 ```
 
 The socket mount is the important part here. It's what lets Jenkins run `docker build` and `docker push` using the host's Docker engine, instead of needing a Docker daemon running inside the container.
