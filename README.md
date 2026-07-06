@@ -1,35 +1,33 @@
 # Jenkins Docker CI/CD Image
 
-A custom Jenkins image with Git, Maven, and the Docker CLI already installed — so you don't have to set them up by hand every time you start a new Jenkins container.
+A Jenkins image with Git, Maven, and the Docker CLI already baked in, so you don't have to install them by hand every time you spin up a new container.
 
-## The Problem
+## Why I built this
 
-Every time I ran Jenkins in a new Docker container — on a new machine, or after rebuilding — I had to manually install the same tools before I could run any pipeline:
+I kept running into the same annoyance. Every time I started a fresh Jenkins container, whether on a new machine or after rebuilding one, I had to install the same things before any pipeline would actually work:
 
-- Docker CLI (to build/push images)
-- Git (to clone repos)
-- Maven (to build Java projects)
+- Docker CLI, so Jenkins can build and push images
+- Git, so it can clone repos
+- Maven, so it can build Java projects
 
-That's five minutes of `apt-get install` every single time, on every server. Annoying, and easy to get wrong or forget a step.
+None of that is hard on its own, but doing it every single time gets old fast, and it's the kind of thing where you eventually forget a step or install a slightly different version without noticing.
 
-## The Fix
-
-Instead of installing those tools *after* the container starts, I baked them straight into a custom image. Now a new Jenkins container is ready to build things the moment it starts — nothing to install, nothing to configure.
+So instead of setting these up after the container starts, I put them straight into the image itself. Now a new Jenkins container comes up already able to build and push, no setup required.
 
 ```mermaid
 flowchart LR
     A[Official Jenkins image] -->|add Git, Maven, Docker CLI| B[My custom image]
     B -->|docker push| C[(GitHub Container Registry)]
-    C -->|docker pull + run, anywhere| D[Jenkins, ready to go]
+    C -->|pull and run anywhere| D[Jenkins, ready to build]
 ```
 
-## What's Inside
+## What's in the image
 
-- Jenkins LTS (with Java 21 built in)
+- Jenkins LTS (comes with Java 21)
 - Git
 - Maven
 - Docker CLI
-- curl, wget, unzip, gnupg, ca-certificates (needed to add Docker's package repo)
+- A few small dependencies needed to add Docker's package repo: curl, wget, unzip, gnupg, ca-certificates
 
 ## The Dockerfile
 
@@ -56,29 +54,27 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /
 USER jenkins
 ```
 
-**What each part does:**
+Walking through it:
 
-1. **`FROM jenkins/jenkins:lts-jdk21`** — starts from the official Jenkins LTS image, which already includes Java 21.
-2. **First `RUN`** — installs Git, Maven, and a few helper tools (`curl`, `wget`, `unzip`, `gnupg`, `ca-certificates`) needed for the next step.
-3. **Second `RUN`** — adds Docker's official package repository and installs just the Docker **CLI** (not a full Docker daemon). Jenkins talks to the Docker daemon already running on the host machine.
-4. **`USER jenkins`** — switches back to the regular Jenkins user so the container doesn't run as root.
+Starting point is the official Jenkins LTS image, which already ships with Java 21, so that's covered from the start.
 
-## How I Built and Published It
+The first `RUN` installs Git and Maven directly, plus a handful of smaller tools (curl, wget, unzip, gnupg, ca-certificates) that aren't needed on their own but are required for the next step to work.
+
+The second `RUN` adds Docker's official APT repository and installs the Docker CLI. Just the CLI, not the full Docker engine. Jenkins doesn't run its own Docker daemon inside the container; it talks to the one already running on the host machine.
+
+Last line switches back to the jenkins user, so the container isn't running as root once it's up.
+
+## How I built and pushed it
 
 ```bash
-# Build the image locally
 docker build -t my-jenkins .
-
-# Tag it for GitHub Container Registry
 docker tag my-jenkins ghcr.io/your-username/my-jenkins:latest
-
-# Push it
 docker push ghcr.io/your-username/my-jenkins:latest
 ```
 
-That's it — three commands, no extra config files.
+Build it, tag it for the registry, push it. That's really all there is to it.
 
-## Running It
+## Running it
 
 ```bash
 docker run -d \
@@ -88,24 +84,24 @@ docker run -d \
   ghcr.io/your-username/my-jenkins:latest
 ```
 
-Mounting `/var/run/docker.sock` is what lets Jenkins run `docker build`/`docker push` commands using the host's Docker engine, without needing Docker installed *inside* the container itself.
+The socket mount is the important part here. It's what lets Jenkins run `docker build` and `docker push` using the host's Docker engine, instead of needing a Docker daemon running inside the container.
 
-Then open **http://localhost:8080** and finish the Jenkins setup screen.
+Once it's up, go to `http://localhost:8080` and finish the Jenkins setup screen.
 
-## Using It on Any New Server
+## Using it on a new server
 
-This is the whole point — no setup steps needed:
+This is the whole reason I made it. On any machine with Docker installed:
 
 ```bash
 docker pull ghcr.io/your-username/my-jenkins:latest
 docker run -d -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/your-username/my-jenkins:latest
 ```
 
-Git, Maven, and the Docker CLI are already there.
+Git, Maven, and the Docker CLI are already there. Nothing else to install.
 
-## Example Pipeline
+## Example pipeline
 
-A pipeline running on this image can go straight to building — no install steps in the Jenkinsfile:
+A pipeline running on this image can jump straight into building, since nothing needs to be installed first:
 
 ```groovy
 pipeline {
@@ -132,19 +128,21 @@ pipeline {
 
 ## Screenshots
 
-_Add screenshots of the Jenkins dashboard and a pipeline run here._
+_Add a screenshot of the Jenkins dashboard and a pipeline run here._
 
-## Lessons Learned
+## What I learned
 
-- Baking tools into the image once is a lot less work than installing them on every new container.
-- Only the Docker **CLI** is needed inside the container — the container uses the host's Docker daemon through the mounted socket, so there's no need to run Docker-inside-Docker.
-- A Dockerfile ends up being the clearest record of "what's installed on this server" — better than any notes or memory.
+Baking the tools into the image once was way less work than I expected, and it's saved me from repeating the same setup on every machine since.
 
-## Future Improvements
+The Docker CLI alone is enough. I didn't need to run a full Docker daemon inside the container. Mounting the host's socket handles everything.
 
-- [ ] Automate the build/push with GitHub Actions
-- [ ] Add version tags instead of just `latest`
-- [ ] Add optional support for other languages (Node.js, Python)
+The Dockerfile itself ended up being a better reference for "what's installed here" than any notes I could've kept. If someone asks what's in the Jenkins environment, the answer is just: read the file.
+
+## What I'd add next
+
+- Automate the build and push with GitHub Actions
+- Use real version tags instead of just `latest`
+- Maybe add optional support for other languages, like Node.js or Python
 
 ## License
 
