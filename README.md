@@ -43,9 +43,6 @@ The rm -rf /var/lib/apt/lists/* at the end just deletes the package index cache 
 ### RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker.gpg && \....:
 This instruction installs the Docker CLI. It fetches Docker's signing key, registers Docker's official APT repository, refreshes the package index so APT sees the new repository, and finally installs docker-ce-cli — the Docker command-line client only, not the full Docker engine.
 
-USER jenkins
-<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/6273c5fa-62e8-408f-8d3a-b3f45f26fdaa" />
-
 ## How I built and pushed it
 
 ```bash
@@ -65,52 +62,15 @@ docker run -d \
   -v jenkins_home:/var/jenkins_home
   ada045/my-jenkins:1.1
 ```
-
-The socket mount is the important part here. It's what lets Jenkins run `docker build` and `docker push` using the host's Docker engine, instead of needing a Docker daemon running inside the container.
-
-Once it's up, go to `http://localhost:8080` and finish the Jenkins setup screen.
-
-## Using it on a new server
-
-This is the whole reason I made it. On any machine with Docker installed:
-
-```bash
-docker pull ghcr.io/your-username/my-jenkins:latest
-docker run -d -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/your-username/my-jenkins:latest
-```
-
-Git, Maven, and the Docker CLI are already there. Nothing else to install.
-
-## Example pipeline
-
-A pipeline running on this image can jump straight into building, since nothing needs to be installed first:
-
-```groovy
-pipeline {
-    agent any
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/your-username/your-app.git'
-            }
-        }
-        stage('Build with Maven') {
-            steps {
-                sh 'mvn clean package -DskipTests'
-            }
-        }
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t my-app:latest .'
-            }
-        }
-    }
-}
-```
-
-## Screenshots
-
-_Add a screenshot of the Jenkins dashboard and a pipeline run here._
+- -d — runs the container in detached mode, so it runs in the background instead of tying up the terminal.
+- --name jenkins — gives the container a name I can reference later instead of Docker generating a random one.
+- -p 8080:8080 — maps port 8080 on my host to port 8080 in the container, which is where Jenkins's web UI runs.
+- -p 50000:50000 — maps the port Jenkins uses for agent communication, in case external build agents ever connect to this controller.
+- -v jenkins_home:/var/jenkins_home — mounts my existing Jenkins data volume for persistence. I had a previous Jenkins container with plugins and configuration already set up, so mounting the same volume here means none of that is lost — this container comes up exactly as I left it.
+- -v /var/run/docker.sock:/var/run/docker.sock — mounts the host's Docker socket into the container. This is the communication channel between the Docker CLI inside the container and the Docker daemon on the host, so any docker command run inside the container is actually carried out by the host's daemon.
+- ada045/my-jenkins:1.1 - This is my image name.
+- 
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/6273c5fa-62e8-408f-8d3a-b3f45f26fdaa" />
 
 ## What I learned
 
@@ -119,13 +79,3 @@ Baking the tools into the image once was way less work than I expected, and it's
 The Docker CLI alone is enough. I didn't need to run a full Docker daemon inside the container. Mounting the host's socket handles everything.
 
 The Dockerfile itself ended up being a better reference for "what's installed here" than any notes I could've kept. If someone asks what's in the Jenkins environment, the answer is just: read the file.
-
-## What I'd add next
-
-- Automate the build and push with GitHub Actions
-- Use real version tags instead of just `latest`
-- Maybe add optional support for other languages, like Node.js or Python
-
-## License
-
-MIT — see [LICENSE](./LICENSE).
