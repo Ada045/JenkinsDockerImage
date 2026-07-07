@@ -12,6 +12,8 @@ I kept running into the same problem. Every time I started a fresh Jenkins conta
 
 Instead of setting these up after the container starts, I put them straight into the image itself. Now a new Jenkins container comes up already able to build and push, no setup required.
 
+<img width="1366" height="768" alt="Screenshot (16)" src="https://github.com/user-attachments/assets/842763d1-d1ab-44c5-86d5-c665a82188e2" />
+
 ```mermaid
 flowchart LR
     A[Official Jenkins image] -->|add Git, Maven, Docker CLI| B[My custom image]
