@@ -14,13 +14,6 @@ Instead of setting these up after the container starts, I put them straight into
 
 <img width="1366" height="768" alt="Screenshot (16)" src="https://github.com/user-attachments/assets/842763d1-d1ab-44c5-86d5-c665a82188e2" />
 
-```mermaid
-flowchart LR
-    A[Official Jenkins image] -->|add Git, Maven, Docker CLI| B[My custom image]
-    B -->|docker push| C[(GitHub Container Registry)]
-    C -->|pull and run anywhere| D[Jenkins, ready to build]
-```
-
 ## What's in the image
 
 - Jenkins LTS (comes with Java 21)
