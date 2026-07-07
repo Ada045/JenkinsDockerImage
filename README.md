@@ -37,19 +37,11 @@ flowchart LR
 - Switches to the root user inside the container. Package installation via apt-get requires elevated privileges, so this is necessary before the following RUN instructions.
 
  ### FIRST RUN apt-get update && apt-get install -y...:
-- Apt-get update refreshes the package index so the subsequent install pulls current package metadata. The install list breaks down as:
+This instruction installs the core tools your pipelines actually need plus a few supporting utilities. Apt-get update refreshes the package index first, then apt-get install -y pulls in everything listed. Git and Maven are there for direct pipeline use (cloning repos, building Java projects); curl, wget, and unzip are general-purpose utilities for downloading and extracting files; and gnupg and ca-certificates aren't used on their own here — they exist to make the next RUN instruction work, since that step needs to verify a signing key and connect over HTTPS.
+The rm -rf /var/lib/apt/lists/* at the end just deletes the package index cache after installation finishes. It doesn't remove anything you installed — it's purely cleanup to keep the image size down.
 
-- git — required for Jenkins to clone source repositories during pipeline execution
-- maven — build tool for Java-based projects
-- curl / wget — HTTP clients used for downloading files; both included, though either alone would typically suffice
-- unzip — needed for extracting compressed archives (plugins, artifacts, etc.)
-- gnupg / ca-certificates — not used directly, but required as dependencies for verifying the GPG signature and TLS certificates in the Docker repository setup in the next step
-- rm -rf /var/lib/apt/lists/* clears the downloaded package index files after installation. This is a standard image-size optimization — it has no effect on installed packages, it just avoids carrying unnecessary cache data in the image layer.
-
-### RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" > /etc/apt/sources.list.d/docker.list && \
-    apt-get update && \
-    apt-get install -y docker-ce-cli
+### RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker.gpg && \....:
+This instruction installs the Docker CLI. It fetches Docker's signing key, registers Docker's official APT repository, refreshes the package index so APT sees the new repository, and finally installs docker-ce-cli — the Docker command-line client only, not the full Docker engine.
 
 USER jenkins
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/6273c5fa-62e8-408f-8d3a-b3f45f26fdaa" />
