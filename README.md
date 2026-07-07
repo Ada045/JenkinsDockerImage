@@ -76,8 +76,6 @@ docker run -d \
 
 ## What I learned
 
-Baking the tools into the image once was way less work than I expected, and it's saved me from repeating the same setup on every machine since.
-
-The Docker CLI alone is enough. I didn't need to run a full Docker daemon inside the container. Mounting the host's socket handles everything.
-
-The Dockerfile itself ended up being a better reference for "what's installed here" than any notes I could've kept. If someone asks what's in the Jenkins environment, the answer is just: read the file.
+- Baking the tools into the image once was way less work than I expected, and it's saved me from repeating the same setup on every machine since.
+- I assumed that adding the /var/run/docker.sock volume meant Docker was basically installed in my container already. It wasn't until my commands weren't working that I realized the socket alone doesn't do anything — I actually needed the Docker CLI installed too, because without it there's nothing inside the container to even run the docker command in the first place. The socket just gives it somewhere to send that command to.
+- I had an old Jenkins container with plugins and jobs already configured, and I didn't want to lose all that just because I was rebuilding the image. Mounting the same volume into the new container saved me from starting from start again.
